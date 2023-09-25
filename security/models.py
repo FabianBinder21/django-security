@@ -29,11 +29,16 @@ class PasswordExpiry(models.Model):
     )
 
     password_expiry_date = models.DateTimeField(
-        auto_now_add=True,
+        auto_now_add=False,
         null=True,
         help_text="The date and time when the user's password expires. If "
                   "this is empty, the password never expires.",
     )
+
+    def save(self, *args, **kwargs):
+        if self.pk is None:
+            self.password_expiry_date = timezone.now()
+        return super().save(*args, **kwargs)
 
     def is_expired(self):
         if self.password_expiry_date is None:
@@ -95,7 +100,7 @@ class CspReport(models.Model):
     )
 
     date_received = models.DateTimeField(
-        auto_now_add=True,
+        auto_now_add=False,
         help_text="When this report was received",
     )
     sender_ip = models.GenericIPAddressField(
@@ -105,6 +110,11 @@ class CspReport(models.Model):
         max_length=1000,
         help_text="User-Agent of reporting browser",
     )
+
+    def save(self, *args, **kwargs):
+        if self.pk is None or self.date_received is None:
+            self.date_received = timezone.now()
+        return super().save(*args, **kwargs)
 
     def __unicode__(self):
         return u'CSP Report: {0} from {1}'.format(
